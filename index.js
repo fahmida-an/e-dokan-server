@@ -24,10 +24,42 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     const serviceCollection = client.db("EdokanDb").collection("collection");
+    const productCollection = client.db("EdokanDb").collection("product")
+    const usersCollection = client.db("EdokanDb").collection("users")
+
+
+    //collection api
     app.get('/collection', async(req,res) => {
         const result = await serviceCollection.find().toArray()
         res.send(result)
       })
+
+      //product api
+      app.get('/product', async(req,res)=> {
+        const result = await productCollection.find().toArray()
+        res.send(result)
+      })
+
+      //user api
+
+      app.put('/users/:email', async(req,res) => {
+        const email = req.params.email
+        const user = req.body
+        const query = {email: email}
+        const options = {upsert: true}
+        const isExist = await usersCollection.findOne(query)
+        console.log('User', isExist);
+        if(isExist) return res.send(isExist)
+        const result = await usersCollection.updateOne(
+          query, {
+            $set: {...user, timestamp: Date.now}
+          },
+          options
+          )
+          res.send(result)
+      })
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -45,7 +77,8 @@ run().catch(console.dir);
 })
 
 app.listen(port, () => {
-    console.log(`edokan is running on ${port}`);
+    console.log(`edokan is running on ${port} `);
 })
+
 
 
